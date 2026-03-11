@@ -2,10 +2,11 @@
 set -euo pipefail
 
 SRC="${OSM_GPKG_PATH:-jiangsu-260307-free.gpkg/jiangsu.gpkg}"
-RAW_DIR="${OSM_GEOJSON_RAW_OUT_DIR:-osm_geojson/raw}"
-ELEM_DIR="${OSM_GEOJSON_ELEM_OUT_DIR:-osm_geojson/elements}"
+RAW_DIR="${OSM_GEOJSON_RAW_OUT_DIR:-resource/geojsonData/raw}"
+ELEM_DIR="${OSM_GEOJSON_ELEM_OUT_DIR:-resource/geojsonData/elements}"
+OUTPUT_ROOT="$(dirname "$RAW_DIR")"
 
-mkdir -p "$RAW_DIR" "$ELEM_DIR"
+mkdir -p "$OUTPUT_ROOT" "$RAW_DIR" "$ELEM_DIR"
 
 export_layer() {
   local layer="$1"
@@ -144,10 +145,8 @@ export_sql \
   "SELECT *, 'provincial_road' AS element, '省道(S*)' AS element_zh, 'gis_osm_roads_free' AS source_layer FROM gis_osm_roads_free WHERE fclass IN ('primary','secondary','primary_link','secondary_link') AND (ref LIKE 'S%' OR ref LIKE 's%')" \
   "$ELEM_DIR/provincial_roads.geojson"
 
-cat <<'README' > osm_geojson/README.md
-# OSM GeoJSON exports (Jiangsu)
-
-Source: `jiangsu-260307-free.gpkg/jiangsu.gpkg`
+cat <<'README' > "$OUTPUT_ROOT/README.md"
+# OSM GeoJSON exports
 
 ## Raw layers
 Each GeoJSON contains all features from the corresponding OSM layer and adds:
@@ -155,10 +154,10 @@ Each GeoJSON contains all features from the corresponding OSM layer and adds:
 - `element_zh`: Chinese label
 - `source_layer`: original OSM layer name
 
-Output directory: `osm_geojson/raw/`
+Output directory: `raw/`
 
 ## Curated elements (heuristic)
-Directory: `osm_geojson/elements/`
+Directory: `elements/`
 - `scenic_landuse.geojson`: scenic areas from landuse polygons
 - `scenic_pois_area.geojson`: scenic areas from POI polygons
 - `scenic_natural.geojson`: scenic areas from natural polygons

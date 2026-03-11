@@ -10,11 +10,11 @@
 
 - PostGIS：数据存储与空间查询。
 - Martin：将 PostGIS 表/视图/函数发布为矢量瓦片服务。
-- 导入脚本：将 `osm_geojson/raw` 与 `osm_geojson/elements` 导入 PostGIS。
+- 导入脚本：将 `resource/geojsonData/raw` 与 `resource/geojsonData/elements` 导入 PostGIS。
 
 ## 数据流
 
-1. GeoJSON 存放于 `../osm_geojson/raw` 与 `../osm_geojson/elements`（仓库内为最小示例数据，完整数据可放在 `.resource`）。
+1. GeoJSON 存放于 `../resource/geojsonData/raw` 与 `../resource/geojsonData/elements`（仓库内 `../geojsonDataExample` 为最小示例数据）。
 2. `scripts/import_geojson.sh` 导入至 `osm_raw` schema。
 3. `sql/10_vt_views.sql` 将 raw 数据整理为语义视图（`vt` schema）。
 4. `sql/20_vt_tilesets.sql` 通过 SQL 函数生成 tileset（`vt` schema）。
@@ -58,7 +58,7 @@
 ## 关键注意事项
 
 - Martin 默认不需要 `.mvt` 后缀。
-- 若更换数据源或分类规则，建议先更新 `osm_geojson` 或 `sql/10_vt_views.sql`。
+- 若更换数据源或分类规则，建议先更新 `resource/geojsonData` 或 `sql/10_vt_views.sql`。
 - `vt` 视图为实时查询（非物化），数据量很大时可考虑物化视图优化。
 - 输入目录可通过 `OSM_GEOJSON_INPUT_DIR` 或 `OSM_GEOJSON_RAW_DIR`/`OSM_GEOJSON_ELEM_DIR` 自定义。
 - PostGIS 数据输出目录可通过 `POSTGIS_DATA_DIR` 自定义。

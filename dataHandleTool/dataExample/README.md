@@ -1,13 +1,30 @@
-# OSM GeoJSON 说明（江苏）
+# GeoJSON 示例数据（江苏）
 
-本目录当前存放的是 **约 1MB 的最小示例数据集**（用于 Git 提交与流程验证）。
+本目录存放的是 **约 1MB 的最小示例数据集**（用于 Git 提交与流程验证）。
 
-完整数据已迁移到（默认被 git 忽略）：
-- `../.resource/osm_geojson/raw_full/`
-- `../.resource/osm_geojson/elements_full/`
-- `../.resource/jiangsu-260307-free.gpkg/jiangsu.gpkg`
+完整数据建议放在默认被 git 忽略的 resource 目录下（防止误上传到git）：
+- `/resource/geojsonData/raw/`
+- `/resource/geojsonData/elements/`
+- `/resource/*.gpkg`
 
-导出脚本支持自定义输入/输出目录（见 `tools/export_osm_geojson.sh` 的环境变量）：
+## 如何使用示例数据
+
+方式 1：修改 Vector-Tiles-Server 的输入路径  
+在 `Vector-Tiles-Server/.env`（或 `.env.example`）中设置：
+
+```
+OSM_GEOJSON_INPUT_DIR=../dataHandleTool/dataExample
+```
+
+方式 2：复制到默认目录（无需改配置）  
+将 `dataHandleTool/dataExample/raw` 与 `dataHandleTool/dataExample/elements` 复制到：
+
+```
+resource/geojsonData/raw
+resource/geojsonData/elements
+```
+
+导出脚本支持自定义输入/输出目录（见 `dataHandleTool/tools/export_osm_geojson.sh` 的环境变量）：
 - `OSM_GPKG_PATH`
 - `OSM_GEOJSON_RAW_OUT_DIR`
 - `OSM_GEOJSON_ELEM_OUT_DIR`
@@ -18,10 +35,10 @@
 - `element_zh`：中文类别标签
 - `source_layer`：原始 OSM 图层名
 
-输出目录：`osm_geojson/raw/`
+输出目录：`raw/`
 
 ## 组合筛选（经验规则）
-输出目录：`osm_geojson/elements/`
+输出目录：`elements/`
 - `scenic_landuse.geojson`：从 landuse 面提取的风景区相关要素
 - `scenic_pois_area.geojson`：从 POI 面提取的风景区相关要素
 - `scenic_natural.geojson`：从 natural 面提取的风景区相关要素
@@ -32,7 +49,7 @@
 - 该数据中湖泊多数标为 `fclass=water`，因此“湖泊/水域”为近似集合。
 
 ## 细分类别
-输出目录：`osm_geojson/elements/`
+输出目录：`elements/`
 
 公园与森林：
 - `parks_landuse.geojson`：`gis_osm_landuse_a_free` 中 `fclass='park'`
