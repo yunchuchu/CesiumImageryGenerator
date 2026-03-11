@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vector Tiles Smoke Test</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" />
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; font-family: "IBM Plex Sans", "Noto Sans", sans-serif; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .panel {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      padding: 12px 14px;
+      max-width: 240px;
+    }
+    .panel h1 { font-size: 14px; margin: 0 0 8px; }
+    .toggle { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; }
+    .legend { font-size: 11px; color: #666; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div class="panel">
+    <h1>Vector Tiles Smoke Test</h1>
+    <label class="toggle"><input type="checkbox" data-layer="transport" checked /> Transport</label>
+    <label class="toggle"><input type="checkbox" data-layer="hydro" checked /> Hydro</label>
+    <label class="toggle"><input type="checkbox" data-layer="landcover" checked /> Landcover</label>
+    <label class="toggle"><input type="checkbox" data-layer="building" checked /> Building</label>
+    <label class="toggle"><input type="checkbox" data-layer="poi" checked /> POI & Place</label>
+    <div class="legend">Server: <span id="server">http://localhost:3000</span></div>
+  </div>
+
+  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+  <script>
+    const server = "http://localhost:3000";
+    document.getElementById("server").textContent = server;
+
+    const style = {
+      version: 8,
+      sources: {
+        transport: { type: "vector", tiles: [`${server}/base_transport/{z}/{x}/{y}`] },
+        hydro: { type: "vector", tiles: [`${server}/base_hydro/{z}/{x}/{y}`] },
+        landcover: { type: "vector", tiles: [`${server}/base_landcover/{z}/{x}/{y}`] },
+        building: { type: "vector", tiles: [`${server}/base_building/{z}/{x}/{y}`] },
+        poi: { type: "vector", tiles: [`${server}/base_poi/{z}/{x}/{y}`] }
+      },
+      layers: [
+        {
+          id: "landuse",
+          type: "fill",
+          source: "landcover",
+          "source-layer": "landuse",
+          paint: { "fill-color": "#dfe8d8", "fill-opacity": 0.7 }
+        },
+        {
+          id: "natural-area",
+          type: "fill",
+          source: "landcover",
+          "source-layer": "natural_area",
+          paint: { "fill-color": "#cbe6d1", "fill-opacity": 0.6 }
+        },
+        {
+          id: "park",
+          type: "fill",
+          source: "landcover",
+          "source-layer": "park",
+          paint: { "fill-color": "#b9e1a1", "fill-opacity": 0.7 }
+        },
+        {
+          id: "forest",
+          type: "fill",
+          source: "landcover",
+          "source-layer": "forest",
+          paint: { "fill-color": "#9ed18b", "fill-opacity": 0.7 }
+        },
+        {
+          id: "scenic",
+          type: "fill",
+          source: "landcover",
+          "source-layer": "scenic_area",
+          paint: { "fill-color": "#f2d095", "fill-opacity": 0.6 }
+        },
+        {
+          id: "water",
+          type: "fill",
+          source: "hydro",
+          "source-layer": "water_polygon",
+          paint: { "fill-color": "#8fc5ea", "fill-opacity": 0.8 }
+        },
+        {
+          id: "water-lines",
+          type: "line",
+          source: "hydro",
+          "source-layer": "waterway_line",
+          paint: { "line-color": "#5ea9dd", "line-width": 1 }
+        },
+        {
+          id: "railway",
+          type: "line",
+          source: "transport",
+          "source-layer": "railway_line",
+          paint: { "line-color": "#444", "line-width": 1, "line-dasharray": [2, 2] }
+        },
+        {
+          id: "road-motorway",
+          type: "line",
+          source: "transport",
+          "source-layer": "road_motorway",
+          paint: { "line-color": "#f15a4a", "line-width": 2.5 }
+        },
+        {
+          id: "road-trunk",
+          type: "line",
+          source: "transport",
+          "source-layer": "road_trunk",
+          paint: { "line-color": "#f7864a", "line-width": 2 }
+        },
+        {
+          id: "road-primary",
+          type: "line",
+          source: "transport",
+          "source-layer": "road_primary",
+          paint: { "line-color": "#f2b35c", "line-width": 1.6 }
+        },
+        {
+          id: "road-secondary",
+          type: "line",
+          source: "transport",
+          "source-layer": "road_secondary",
+          paint: { "line-color": "#f7d48a", "line-width": 1.2 }
+        },
+        {
+          id: "road-tertiary",
+          type: "line",
+          source: "transport",
+          "source-layer": "road_tertiary",
+          paint: { "line-color": "#f9e2b5", "line-width": 1.0 }
+        },
+        {
+          id: "building",
+          type: "fill",
+          source: "building",
+          "source-layer": "building",
+          paint: { "fill-color": "#c8b2a6", "fill-opacity": 0.75 }
+        },
+        {
+          id: "poi",
+          type: "circle",
+          source: "poi",
+          "source-layer": "poi_point",
+          paint: { "circle-color": "#1d4ed8", "circle-radius": 3, "circle-opacity": 0.8 }
+        },
+        {
+          id: "place",
+          type: "circle",
+          source: "poi",
+          "source-layer": "place_point",
+          paint: { "circle-color": "#111827", "circle-radius": 4, "circle-opacity": 0.7 }
+        }
+      ]
+    };
+
+    const map = new maplibregl.Map({
+      container: "map",
+      style,
+      center: [120.4, 31.5],
+      zoom: 7
+    });
+
+    map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+
+    const groups = {
+      transport: ["railway", "road-motorway", "road-trunk", "road-primary", "road-secondary", "road-tertiary"],
+      hydro: ["water", "water-lines"],
+      landcover: ["landuse", "natural-area", "park", "forest", "scenic"],
+      building: ["building"],
+      poi: ["poi", "place"]
+    };
+
+    document.querySelectorAll("input[data-layer]").forEach((input) => {
+      input.addEventListener("change", () => {
+        const group = input.dataset.layer;
+        groups[group].forEach((layerId) => {
+          map.setLayoutProperty(layerId, "visibility", input.checked ? "visible" : "none");
+        });
+      });
+    });
+  </script>
+</body>
+</html>

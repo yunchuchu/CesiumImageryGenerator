@@ -1,0 +1,32 @@
+services:
+  postgis:
+    image: ${POSTGIS_IMAGE:-postgis/postgis:16-3.4}
+    container_name: vtserver-postgis
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gis}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ${POSTGIS_DATA_DIR:-./pgdata}:/var/lib/postgresql/data
+      - ./sql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-gis}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  martin:
+    image: ${MARTIN_IMAGE:-ghcr.io/maplibre/martin:latest}
+    container_name: vtserver-martin
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgis:5432/${POSTGRES_DB:-gis}
+    volumes:
+      - ./martin.yml:/etc/martin.yml:ro
+    command: ["-c", "/etc/martin.yml"]
+    ports:
+      - "${MARTIN_PORT:-3000}:3000"
+    depends_on:
+      postgis:
+        condition: service_healthy

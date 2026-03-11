@@ -1,0 +1,19 @@
+postgres:
+  connection_string: postgresql://postgres:postgres@postgis:5432/gis
+  auto_publish: false
+  functions:
+    base_transport:
+      schema: vt
+      function: base_transport
+    base_hydro:
+      schema: vt
+      function: base_hydro
+    base_landcover:
+      schema: vt
+      function: base_landcover
+    base_building:
+      schema: vt
+      function: base_building
+    base_poi:
+      schema: vt
+      function: base_poi
