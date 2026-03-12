@@ -87,7 +87,7 @@ make up
 - 默认读取：
   - `../resource/geojsonData/raw/`
   - `../resource/geojsonData/elements/`
-- 仓库内 `../geojsonDataExample/` 为约 1MB 的最小示例数据，可用于快速提交和流程验证。
+- 仓库内 `../dataHandleTool/dataExample/` 为约 1MB 的最小示例数据，可用于快速提交和流程验证。
 - 完整数据建议放在 `../resource/`（默认被 git 忽略）。
 - 所有数据会导入到 `osm_raw` schema 中，几何列 `geom` 采用 EPSG:4326。
 - 会在几何列以及 `fclass`、`name`、`ref`、`element`、`source_layer`（存在时）上建立常用索引。

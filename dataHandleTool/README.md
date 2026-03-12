@@ -51,4 +51,4 @@ export OSM_GPKG_PATH=/path/to/output.gpkg
 - `element_zh`：中文类别标签
 - `source_layer`：原始 OSM 图层名
 
-更多导出数据说明参看 dataExample 目录下的 reamrk.md
+更多导出数据说明参看 `dataExample/README.md`

@@ -14,7 +14,7 @@
 
 ## 数据流
 
-1. GeoJSON 存放于 `../resource/geojsonData/raw` 与 `../resource/geojsonData/elements`（仓库内 `../geojsonDataExample` 为最小示例数据）。
+1. GeoJSON 存放于 `../resource/geojsonData/raw` 与 `../resource/geojsonData/elements`（仓库内 `../dataHandleTool/dataExample` 为最小示例数据）。
 2. `scripts/import_geojson.sh` 导入至 `osm_raw` schema。
 3. `sql/10_vt_views.sql` 将 raw 数据整理为语义视图（`vt` schema）。
 4. `sql/20_vt_tilesets.sql` 通过 SQL 函数生成 tileset（`vt` schema）。
