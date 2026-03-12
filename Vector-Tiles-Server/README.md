@@ -33,17 +33,27 @@ make up
 make import
 ```
 
+说明：若未设置 `OSM_GEOJSON_INPUT_DIR` / `OSM_GEOJSON_RAW_DIR` / `OSM_GEOJSON_ELEM_DIR`，会提示输入 GeoJSON 根目录（留空使用默认 `../resource/geojsonData`）。
+
 3. 构建整理后的视图与瓦片集
 
 ```bash
 make vt
 ```
 
-4. 打开目录页
+4. 重启 Martin 以加载新创建的 `vt` schema
+
+```bash
+docker compose restart martin
+```
+
+说明：如果先 `make up` 再执行 `make vt`，需要重启 Martin，否则 `/catalog` 可能为空。
+
+5. 打开目录页
 
 `http://localhost:3000/catalog`
 
-5. 在 MapLibre 中做烟雾测试
+6. 在 MapLibre 中做烟雾测试
 
 ```bash
 cd Vector-Tiles-Server/maplibre
@@ -72,18 +82,20 @@ make up
 
 ## 数据导入说明
 
-- 原始数据读取自：
-  - `../osm_geojson/raw/`
-  - `../osm_geojson/elements/`
-- 仓库内 `../osm_geojson/` 为约 1MB 的最小示例数据，可用于快速提交和流程验证。
-- 完整数据已迁移到 `../.resource/`（默认被 git 忽略）。
+- `make import` 若未设置环境变量，会提示输入 GeoJSON 根目录（留空使用默认 `../resource/geojsonData`）。
+- 若先启动服务再执行 `make vt`，需要重启 Martin 才能加载 `vt` schema。
+- 默认读取：
+  - `../resource/geojsonData/raw/`
+  - `../resource/geojsonData/elements/`
+- 仓库内 `../dataHandleTool/dataExample/` 为约 1MB 的最小示例数据，可用于快速提交和流程验证。
+- 完整数据建议放在 `../resource/`（默认被 git 忽略）。
 - 所有数据会导入到 `osm_raw` schema 中，几何列 `geom` 采用 EPSG:4326。
 - 会在几何列以及 `fclass`、`name`、`ref`、`element`、`source_layer`（存在时）上建立常用索引。
 
 如果要导入其他数据集，可设置输入目录（支持两种方式）：
 
 ```
-OSM_GEOJSON_INPUT_DIR=/absolute/path/to/osm_geojson
+OSM_GEOJSON_INPUT_DIR=/absolute/path/to/geojsonData
 OSM_GEOJSON_RAW_DIR=/absolute/path/to/raw
 OSM_GEOJSON_ELEM_DIR=/absolute/path/to/elements
 ```
@@ -100,10 +112,10 @@ OSM_GEOJSON_ELEM_DIR=/absolute/path/to/elements
 POSTGIS_DATA_DIR=./pgdata
 ```
 
-例如输出到仓库外部或 `.resource`：
+例如输出到仓库外部或 `resource`：
 
 ```
-POSTGIS_DATA_DIR=../.resource/Vector-Tiles-Server/pgdata
+POSTGIS_DATA_DIR=../resource/Vector-Tiles-Server/pgdata
 ```
 
 ## 查看数据（PostGIS）

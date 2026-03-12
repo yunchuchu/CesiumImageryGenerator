@@ -1,11 +1,144 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SRC="${OSM_GPKG_PATH:-jiangsu-260307-free.gpkg/jiangsu.gpkg}"
-RAW_DIR="${OSM_GEOJSON_RAW_OUT_DIR:-osm_geojson/raw}"
-ELEM_DIR="${OSM_GEOJSON_ELEM_OUT_DIR:-osm_geojson/elements}"
+usage() {
+  cat <<'USAGE'
+Usage:
+  export_osm_geojson.sh [options] [INPUT_GPKG] [OUTPUT_ROOT]
 
-mkdir -p "$RAW_DIR" "$ELEM_DIR"
+Options:
+  -i, --input        Input GPKG file (default: env OSM_GPKG_PATH or built-in)
+  -o, --output-root  Output root directory (default: env OSM_GEOJSON_OUT_DIR or derived)
+  -r, --raw-dir      Raw GeoJSON output directory (overrides output root)
+  -e, --elem-dir     Curated elements output directory (overrides output root)
+  -h, --help         Show this help
+
+Examples:
+  ./export_osm_geojson.sh -i data/osm.gpkg -o resource/geojsonData
+  ./export_osm_geojson.sh data/osm.gpkg resource/geojsonData
+  ./export_osm_geojson.sh -i data/osm.gpkg -r out/raw -e out/elements
+USAGE
+}
+
+SRC="${OSM_GPKG_PATH:-jiangsu-260307-free.gpkg/jiangsu.gpkg}"
+OUTPUT_ROOT="${OSM_GEOJSON_OUT_DIR:-}"
+RAW_DIR="${OSM_GEOJSON_RAW_OUT_DIR:-}"
+ELEM_DIR="${OSM_GEOJSON_ELEM_OUT_DIR:-}"
+
+SRC_SET=false
+OUTPUT_ROOT_SET=false
+RAW_DIR_SET=false
+ELEM_DIR_SET=false
+
+positional=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -i|--input)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for $1" >&2
+        usage
+        exit 1
+      fi
+      SRC="$2"
+      SRC_SET=true
+      shift 2
+      ;;
+    -o|--output-root)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for $1" >&2
+        usage
+        exit 1
+      fi
+      OUTPUT_ROOT="$2"
+      OUTPUT_ROOT_SET=true
+      shift 2
+      ;;
+    -r|--raw-dir)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for $1" >&2
+        usage
+        exit 1
+      fi
+      RAW_DIR="$2"
+      RAW_DIR_SET=true
+      shift 2
+      ;;
+    -e|--elem-dir)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for $1" >&2
+        usage
+        exit 1
+      fi
+      ELEM_DIR="$2"
+      ELEM_DIR_SET=true
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      while [[ $# -gt 0 ]]; do
+        positional+=("$1")
+        shift
+      done
+      ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      usage
+      exit 1
+      ;;
+    *)
+      positional+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [[ ${#positional[@]} -gt 0 ]] && ! $SRC_SET; then
+  SRC="${positional[0]}"
+  SRC_SET=true
+fi
+
+if [[ ${#positional[@]} -gt 1 ]] && ! $OUTPUT_ROOT_SET; then
+  OUTPUT_ROOT="${positional[1]}"
+  OUTPUT_ROOT_SET=true
+fi
+
+if [[ ${#positional[@]} -gt 2 ]]; then
+  echo "Too many positional arguments" >&2
+  usage
+  exit 1
+fi
+
+if [[ -z "$OUTPUT_ROOT" ]]; then
+  if [[ -n "$RAW_DIR" ]]; then
+    OUTPUT_ROOT="$(dirname "$RAW_DIR")"
+  else
+    OUTPUT_ROOT="resource/geojsonData"
+  fi
+fi
+
+if $OUTPUT_ROOT_SET; then
+  if ! $RAW_DIR_SET; then
+    RAW_DIR=""
+  fi
+  if ! $ELEM_DIR_SET; then
+    ELEM_DIR=""
+  fi
+fi
+
+if [[ -z "$RAW_DIR" ]]; then
+  RAW_DIR="$OUTPUT_ROOT/raw"
+fi
+
+if [[ -z "$ELEM_DIR" ]]; then
+  ELEM_DIR="$OUTPUT_ROOT/elements"
+fi
+
+mkdir -p "$OUTPUT_ROOT" "$RAW_DIR" "$ELEM_DIR"
 
 export_layer() {
   local layer="$1"
@@ -144,10 +277,8 @@ export_sql \
   "SELECT *, 'provincial_road' AS element, '省道(S*)' AS element_zh, 'gis_osm_roads_free' AS source_layer FROM gis_osm_roads_free WHERE fclass IN ('primary','secondary','primary_link','secondary_link') AND (ref LIKE 'S%' OR ref LIKE 's%')" \
   "$ELEM_DIR/provincial_roads.geojson"
 
-cat <<'README' > osm_geojson/README.md
-# OSM GeoJSON exports (Jiangsu)
-
-Source: `jiangsu-260307-free.gpkg/jiangsu.gpkg`
+cat <<'README' > "$OUTPUT_ROOT/README.md"
+# OSM GeoJSON exports
 
 ## Raw layers
 Each GeoJSON contains all features from the corresponding OSM layer and adds:
@@ -155,10 +286,10 @@ Each GeoJSON contains all features from the corresponding OSM layer and adds:
 - `element_zh`: Chinese label
 - `source_layer`: original OSM layer name
 
-Output directory: `osm_geojson/raw/`
+Output directory: `raw/`
 
 ## Curated elements (heuristic)
-Directory: `osm_geojson/elements/`
+Directory: `elements/`
 - `scenic_landuse.geojson`: scenic areas from landuse polygons
 - `scenic_pois_area.geojson`: scenic areas from POI polygons
 - `scenic_natural.geojson`: scenic areas from natural polygons

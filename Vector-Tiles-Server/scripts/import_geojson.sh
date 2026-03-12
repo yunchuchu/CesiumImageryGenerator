@@ -16,8 +16,8 @@ INPUT_ROOT="${OSM_GEOJSON_INPUT_DIR:-}"
 RAW_DIR="${OSM_GEOJSON_RAW_DIR:-${INPUT_ROOT:+$INPUT_ROOT/raw}}"
 ELEM_DIR="${OSM_GEOJSON_ELEM_DIR:-${INPUT_ROOT:+$INPUT_ROOT/elements}}"
 
-RAW_DIR="${RAW_DIR:-$REPO_ROOT/osm_geojson/raw}"
-ELEM_DIR="${ELEM_DIR:-$REPO_ROOT/osm_geojson/elements}"
+RAW_DIR="${RAW_DIR:-$REPO_ROOT/resource/geojsonData/raw}"
+ELEM_DIR="${ELEM_DIR:-$REPO_ROOT/resource/geojsonData/elements}"
 
 if [[ ! -d "$RAW_DIR" ]]; then
   echo "Missing raw directory: $RAW_DIR" >&2
