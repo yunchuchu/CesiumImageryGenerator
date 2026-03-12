@@ -33,17 +33,27 @@ make up
 make import
 ```
 
+说明：若未设置 `OSM_GEOJSON_INPUT_DIR` / `OSM_GEOJSON_RAW_DIR` / `OSM_GEOJSON_ELEM_DIR`，会提示输入 GeoJSON 根目录（留空使用默认 `../resource/geojsonData`）。
+
 3. 构建整理后的视图与瓦片集
 
 ```bash
 make vt
 ```
 
-4. 打开目录页
+4. 重启 Martin 以加载新创建的 `vt` schema
+
+```bash
+docker compose restart martin
+```
+
+说明：如果先 `make up` 再执行 `make vt`，需要重启 Martin，否则 `/catalog` 可能为空。
+
+5. 打开目录页
 
 `http://localhost:3000/catalog`
 
-5. 在 MapLibre 中做烟雾测试
+6. 在 MapLibre 中做烟雾测试
 
 ```bash
 cd Vector-Tiles-Server/maplibre
@@ -72,6 +82,8 @@ make up
 
 ## 数据导入说明
 
+- `make import` 若未设置环境变量，会提示输入 GeoJSON 根目录（留空使用默认 `../resource/geojsonData`）。
+- 若先启动服务再执行 `make vt`，需要重启 Martin 才能加载 `vt` schema。
 - 默认读取：
   - `../resource/geojsonData/raw/`
   - `../resource/geojsonData/elements/`

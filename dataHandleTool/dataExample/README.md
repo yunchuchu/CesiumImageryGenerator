@@ -24,10 +24,16 @@ resource/geojsonData/raw
 resource/geojsonData/elements
 ```
 
-导出脚本支持自定义输入/输出目录（见 `dataHandleTool/tools/export_osm_geojson.sh` 的环境变量）：
+导出脚本支持自定义输入/输出目录（见 `dataHandleTool/tools/export_osm_geojson.sh` 的参数或环境变量）：
 - `OSM_GPKG_PATH`
+- `OSM_GEOJSON_OUT_DIR`
 - `OSM_GEOJSON_RAW_OUT_DIR`
 - `OSM_GEOJSON_ELEM_OUT_DIR`
+
+示例：
+```bash
+./dataHandleTool/tools/export_osm_geojson.sh -i /path/to/output.gpkg -o resource/geojsonData
+```
 
 ## 原始图层导出
 每个 GeoJSON 都包含对应 OSM 图层的全部要素，并附加字段：

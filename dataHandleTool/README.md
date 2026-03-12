@@ -16,8 +16,16 @@
 
 输入参数（环境变量）：
 - `OSM_GPKG_PATH`：输入的 `.gpkg` 路径
+- `OSM_GEOJSON_OUT_DIR`：输出根目录（默认 `resource/geojsonData`）
 - `OSM_GEOJSON_RAW_OUT_DIR`：raw 输出目录（默认 `resource/geojsonData/raw`）
 - `OSM_GEOJSON_ELEM_OUT_DIR`：elements 输出目录（默认 `resource/geojsonData/elements`）
+
+输入参数（命令行）：
+- `-i, --input`：输入 GPKG 文件
+- `-o, --output-root`：输出根目录
+- `-r, --raw-dir`：raw 输出目录（覆盖 `-o`）
+- `-e, --elem-dir`：elements 输出目录（覆盖 `-o`）
+- 位置参数：`INPUT_GPKG`、`OUTPUT_ROOT`
 
 ### 使用说明
 
@@ -27,6 +35,9 @@ export OSM_GPKG_PATH=/path/to/output.gpkg
 
 # 导出目录 默认目录（resource/geojsonData）
 ./dataHandleTool/tools/export_osm_geojson.sh
+
+# 命令行参数（优先级高于环境变量）
+./dataHandleTool/tools/export_osm_geojson.sh -i /path/to/output.gpkg -o resource/geojsonData
 ```
 
 ### 产出数据说明

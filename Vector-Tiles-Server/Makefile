@@ -20,7 +20,16 @@ psql:
 	$(COMPOSE) exec postgis psql -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-gis}
 
 import:
-	$(PROJECT_DIR)/scripts/import_geojson.sh
+	@if [[ -n "$$OSM_GEOJSON_INPUT_DIR" || -n "$$OSM_GEOJSON_RAW_DIR" || -n "$$OSM_GEOJSON_ELEM_DIR" ]]; then \
+		$(PROJECT_DIR)/scripts/import_geojson.sh; \
+	else \
+		read -r -p "GeoJSON 根目录（留空使用默认 ../resource/geojsonData）: " input; \
+		if [[ -n "$$input" ]]; then \
+			OSM_GEOJSON_INPUT_DIR="$$input" $(PROJECT_DIR)/scripts/import_geojson.sh; \
+		else \
+			$(PROJECT_DIR)/scripts/import_geojson.sh; \
+		fi; \
+	fi
 
 vt:
 	$(PROJECT_DIR)/scripts/apply_vt_sql.sh

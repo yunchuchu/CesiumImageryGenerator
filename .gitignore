@@ -1,6 +1,6 @@
 .DS_Store
 .cursor/
-resource/
+resource/**
 .idea/
 
 Vector-Tiles-Server/.env
