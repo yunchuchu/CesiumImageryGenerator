@@ -109,10 +109,15 @@ function normalizeExportPayload(body: unknown): ExportRequest {
   if (!payload.style) throw new Error("缺少 style");
   if (!payload.export) throw new Error("缺少 export");
 
-  const { minZoom, maxZoom, bounds } = payload.export;
-  if (!Number.isFinite(minZoom) || !Number.isFinite(maxZoom)) {
-    throw new Error("minZoom/maxZoom 必须为数字");
-  }
+  const raw = payload.export as Partial<ExportOptions> & {
+    bounds?: ExportOptions["bounds"];
+    outputPath?: string;
+  };
+
+  const minZoom = Number.isFinite(raw.minZoom as number) ? (raw.minZoom as number) : 0;
+  const maxZoom = Number.isFinite(raw.maxZoom as number) ? (raw.maxZoom as number) : 17;
+
+  const { bounds } = raw;
   if (!Array.isArray(bounds) || bounds.length !== 4) {
     throw new Error("bounds 必须为 [minLng, minLat, maxLng, maxLat]");
   }
@@ -120,12 +125,12 @@ function normalizeExportPayload(body: unknown): ExportRequest {
   return {
     style: payload.style,
     export: {
-      format: payload.export.format ?? "png",
-      tileSize: payload.export.tileSize ?? 256,
+      format: raw.format ?? "png",
+      tileSize: raw.tileSize ?? 256,
       minZoom,
       maxZoom,
       bounds: bounds as [number, number, number, number],
-      outputPath: payload.export.outputPath
+      outputPath: raw.outputPath
     }
   };
 }
