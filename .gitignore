@@ -2,6 +2,12 @@
 .cursor/
 resource/**
 .idea/
+.pnpm-store/
+*.log
 
 Vector-Tiles-Server/.env
 Vector-Tiles-Server/pgdata/
+VectorTileToCesiumImageryLayerTiles/service/output/
+VectorTileToCesiumImageryLayerTiles/shared/dist/
+VectorTileToCesiumImageryLayerTiles/web/dist/
+node_modules/

@@ -9,6 +9,34 @@
 
 ### 工具介绍
 
+#### 1. OSM 裁剪工具 `clip_osm_by_region.sh`
+
+按边界框（bbox）或 GeoJSON 多边形裁剪 OSM 数据（GPKG 或 GeoJSON），可与 `export_osm_geojson.sh` 串联：先裁剪再导出。
+
+依赖：`ogr2ogr`（与导出脚本相同）
+
+| 类型 | 参数 |
+|------|------|
+| 环境变量 | `OSM_CLIP_INPUT` 输入路径；`OSM_CLIP_OUTPUT` 输出路径；`OSM_CLIP_BBOX` 四元组 `min_lon min_lat max_lon max_lat`；`OSM_CLIP_POLYGON` 裁剪多边形 GeoJSON 路径 |
+| 命令行 | `-i, --input` 输入；`-o, --output` 输出；`-b, --bbox` bbox（与 `-p` 二选一）；`-p, --polygon` 多边形文件路径 |
+| 约定 | 命令行覆盖环境变量；边界必须且只能指定 bbox 或 polygon 之一 |
+
+示例：
+
+```bash
+# 按 bbox 裁剪 GPKG（-b 后跟四个数：min_lon min_lat max_lon max_lat）
+./dataHandleTool/tools/clip_osm_by_region.sh -i region.gpkg -o clipped.gpkg -b 116.0 31.0 119.0 34.0
+
+# 按多边形裁剪
+./dataHandleTool/tools/clip_osm_by_region.sh -i region.gpkg -o out.gpkg -p boundary.geojson
+
+# 裁剪后再导出 GeoJSON（流水线）
+./dataHandleTool/tools/clip_osm_by_region.sh -i full.gpkg -o clipped.gpkg -b 116 31 119 34
+./dataHandleTool/tools/export_osm_geojson.sh -i clipped.gpkg -o resource/geojsonData
+```
+
+#### 2. GeoJSON 导出 `export_osm_geojson.sh`
+
 `dataHandleTool/tools/export_osm_geojson.sh` 用于从 Geofabrik 的 `.gpkg` 数据导出可用于导入的 GeoJSON。
 
 依赖：
@@ -38,6 +66,10 @@ export OSM_GPKG_PATH=/path/to/output.gpkg
 
 # 命令行参数（优先级高于环境变量）
 ./dataHandleTool/tools/export_osm_geojson.sh -i /path/to/output.gpkg -o resource/geojsonData
+
+# 先裁剪再导出（推荐在数据量大时只处理目标区域）
+./dataHandleTool/tools/clip_osm_by_region.sh -i /path/to/full.gpkg -o /path/to/clipped.gpkg -b 116 31 119 34
+./dataHandleTool/tools/export_osm_geojson.sh -i /path/to/clipped.gpkg -o resource/geojsonData
 ```
 
 ### 产出数据说明

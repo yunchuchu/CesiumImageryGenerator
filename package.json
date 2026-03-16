@@ -1,0 +1,12 @@
+{
+  "name": "cesium-imagery-generator",
+  "private": true,
+  "packageManager": "pnpm@9.12.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:web": "pnpm -C VectorTileToCesiumImageryLayerTiles/web dev",
+    "dev:service": "pnpm -C VectorTileToCesiumImageryLayerTiles/service dev"
+  }
+}

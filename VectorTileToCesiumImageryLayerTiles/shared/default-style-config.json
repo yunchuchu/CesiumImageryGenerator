@@ -1,0 +1,57 @@
+{
+  "tileServerUrl": "http://localhost:3000",
+  "backgroundColor": "#f6f4ef",
+  "groups": [
+    {
+      "id": "transport",
+      "label": "Transport",
+      "visible": true,
+      "layers": [
+        { "id": "railway", "visible": true, "color": "#444444", "lineWidth": 1, "zIndex": 6 },
+        { "id": "road-motorway", "visible": true, "color": "#f15a4a", "lineWidth": 2.5, "zIndex": 7 },
+        { "id": "road-trunk", "visible": true, "color": "#f7864a", "lineWidth": 2, "zIndex": 8 },
+        { "id": "road-primary", "visible": true, "color": "#f2b35c", "lineWidth": 1.6, "zIndex": 9 },
+        { "id": "road-secondary", "visible": true, "color": "#f7d48a", "lineWidth": 1.2, "zIndex": 10 },
+        { "id": "road-tertiary", "visible": true, "color": "#f9e2b5", "lineWidth": 1, "zIndex": 11 }
+      ]
+    },
+    {
+      "id": "hydro",
+      "label": "Hydro",
+      "visible": true,
+      "layers": [
+        { "id": "water", "visible": true, "color": "#8fc5ea", "opacity": 0.8, "zIndex": 5 },
+        { "id": "water-lines", "visible": true, "color": "#5ea9dd", "lineWidth": 1, "zIndex": 12 }
+      ]
+    },
+    {
+      "id": "landcover",
+      "label": "Landcover",
+      "visible": true,
+      "layers": [
+        { "id": "landuse", "visible": true, "color": "#dfe8d8", "opacity": 0.7, "zIndex": 0 },
+        { "id": "natural-area", "visible": true, "color": "#cbe6d1", "opacity": 0.6, "zIndex": 1 },
+        { "id": "park", "visible": true, "color": "#b9e1a1", "opacity": 0.7, "zIndex": 2 },
+        { "id": "forest", "visible": true, "color": "#9ed18b", "opacity": 0.7, "zIndex": 3 },
+        { "id": "scenic", "visible": true, "color": "#f2d095", "opacity": 0.6, "zIndex": 4 }
+      ]
+    },
+    {
+      "id": "building",
+      "label": "Building",
+      "visible": true,
+      "layers": [
+        { "id": "building", "visible": true, "color": "#c8b2a6", "opacity": 0.75, "zIndex": 13 }
+      ]
+    },
+    {
+      "id": "poi",
+      "label": "POI & Place",
+      "visible": true,
+      "layers": [
+        { "id": "poi", "visible": true, "color": "#1d4ed8", "circleRadius": 3, "opacity": 0.8, "zIndex": 14 },
+        { "id": "place", "visible": true, "color": "#111827", "circleRadius": 4, "opacity": 0.7, "zIndex": 15 }
+      ]
+    }
+  ]
+}
