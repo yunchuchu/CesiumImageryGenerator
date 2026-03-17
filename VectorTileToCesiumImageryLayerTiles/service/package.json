@@ -4,21 +4,25 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@vttc/shared": "workspace:*",
     "@mapbox/vector-tile": "^2.0.4",
     "@napi-rs/canvas": "^0.1.80",
+    "@vttc/shared": "workspace:*",
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "pbf": "^4.0.1"
+    "maplibre-gl": "^3.6.1",
+    "pbf": "^4.0.1",
+    "playwright": "^1.58.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.2",
     "tsx": "^4.19.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^3.2.4"
   }
 }

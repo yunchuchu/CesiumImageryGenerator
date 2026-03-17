@@ -19,6 +19,36 @@ pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGener
 
 服务默认端口：`http://localhost:4100`
 
+### 渲染后端
+
+服务支持三种渲染后端，通过环境变量 `RENDER_BACKEND` 选择：
+
+- `canvas`：默认值，继续使用 `@napi-rs/canvas` CPU 路径，兼容性最好。
+- `webgl`：通过 `Playwright + Chromium + MapLibre GL JS` 进行浏览器渲染。
+- `auto`：优先尝试 `webgl`，初始化失败后自动回退到 `canvas`。
+
+推荐启动命令：
+
+```bash
+# 稳定回归路径
+RENDER_BACKEND=canvas pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service dev
+
+# 本机 GUI / GPU 验证路径（macOS 推荐）
+RENDER_BACKEND=webgl RENDER_HEADLESS=false pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service dev
+
+# 优先 WebGL，失败自动回退
+RENDER_BACKEND=auto RENDER_HEADLESS=false pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service dev
+```
+
+如果需要自定义 Chromium 参数，可追加 `RENDER_ARGS`：
+
+```bash
+RENDER_BACKEND=webgl \
+RENDER_HEADLESS=false \
+RENDER_ARGS="--use-angle=metal --disable-gpu-sandbox" \
+pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service dev
+```
+
 ## 启动 Web 编辑器
 
 ```bash
@@ -37,6 +67,12 @@ pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGener
 
 ```bash
 bash /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh
+```
+
+WebGL/auto 小范围冒烟：
+
+```bash
+bash /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo-webgl.sh
 ```
 
 返回示例：
@@ -62,10 +98,13 @@ curl -sS http://localhost:4100/api/exports/<job-id>
 - 样式配置的 `tileServerUrl` 默认为 `http://localhost:3000`。
 - `bounds` 为 `[minLng, minLat, maxLng, maxLat]`，超出 Web Mercator 范围会被裁剪。
 - 这是最小实现，未加入任务队列与并发控制。
-- 导出服务为纯服务端栅格化，不依赖浏览器/WebGL。
 - 可通过 `SOURCE_FETCH_TIMEOUT_MS` 控制单个矢量瓦片请求超时（默认 `8000`）。
 - 可通过 `TILE_RENDER_TIMEOUT_MS` 控制单瓦片渲染超时（默认 `15000`）。
+- 可通过 `WEBGL_TILE_RENDER_TIMEOUT_MS` 控制 WebGL 单瓦片渲染超时（默认 `30000`）。
 - 可通过 `RENDER_MAX_FEATURES_PER_LAYER` 控制每个 source-layer 的最大渲染要素数（默认 `20000`）。
+- `RENDER_HEADLESS=false` 更适合在本机 GUI 环境下验证 WebGL；无 GUI 或 GPU 不稳定时建议先用 `canvas`。
+- `RENDER_BACKEND=auto` 只在渲染器初始化阶段做一次回退决策；任务开始后不会在中途切换后端。
+- 初始化失败或单瓦片失败会写入输出目录中的 `failures.json`，`metadata.json` 中也会记录最终采用的后端与失败摘要。
 
 ## 导出样式与缩放级别
 
@@ -96,7 +135,7 @@ curl -sS http://localhost:4100/api/exports/<job-id>
 我们提供了一个示例脚本，便于从命令行快速发起导出：
 
 ```bash
-bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh [样式文件路径] [minZoom] [maxZoom]
+bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh [样式文件路径] [minZoom] [maxZoom] [outputPath]
 ```
 
 - **默认行为（不传参数）**：
@@ -112,7 +151,29 @@ bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh
 bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh \
   /path/to/web-exported-style.json \
   7 \
-  14
+  14 \
+  output/custom-demo
 ```
 
-脚本会先在标准错误输出一份请求体预览，随后通过 `curl` 调用 `http://localhost:4100/api/exports`，方便你复制该 JSON 到其他 HTTP 客户端中复用。
+脚本会先在标准错误输出一份请求体预览，随后通过 `curl` 调用 `http://localhost:4100/api/exports`。如果服务不是跑在默认地址，可通过 `SERVICE_URL=http://host:port` 覆盖。
+
+### WebGL 快速验证
+
+```bash
+# 1. 启动服务
+RENDER_BACKEND=webgl RENDER_HEADLESS=false \
+pnpm -C VectorTileToCesiumImageryLayerTiles/service dev
+
+# 2. 发起一个小范围导出
+bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo-webgl.sh
+
+# 3. 查询任务状态
+curl -sS http://localhost:4100/api/exports/<job-id>
+```
+
+如果当前机器的 WebGL 初始化失败，可直接改用：
+
+```bash
+RENDER_BACKEND=auto RENDER_HEADLESS=false \
+pnpm -C VectorTileToCesiumImageryLayerTiles/service dev
+```
