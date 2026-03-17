@@ -1,63 +1,34 @@
-# Vector Tiles To Cesium Imagery Export
-
-## Requirements
-
-### Requirement: 导出请求体包含样式与导出参数
-
-导出服务 SHALL 要求 `POST /api/exports` 的请求体中包含顶层 `style` 与 `export` 两个字段，其中 `style` 提供完整样式配置，`export` 提供导出相关参数（如格式、缩放级别与范围）。
-
-#### Scenario: 有效的导出请求体
-
-- **WHEN** 调用方在请求体中提供 `style`（样式 JSON）与 `export`（包含导出参数）的对象
-- **THEN** 导出服务 SHALL 接受该请求并进入导出任务创建流程
-
-### Requirement: 导出参数支持瓦片格式与大小配置
-
-导出服务 SHALL 在 `export` 字段中至少支持 `format` 与 `tileSize` 两个参数，用于控制输出影像瓦片的文件格式与单瓦片尺寸。
-
-#### Scenario: 设置 PNG 格式与 256 像素瓦片
-
-- **WHEN** 调用方在 `export` 参数中设置 `format = 'png'` 且 `tileSize = 256`
-- **THEN** 导出服务 SHALL 生成 256x256 像素大小的 PNG 影像瓦片
+## ADDED Requirements
 
 ### Requirement: 导出服务支持显式选择渲染后端
-
 导出服务 SHALL 支持通过服务级运行配置选择 `canvas`、`webgl` 或 `auto` 三种渲染后端模式，并在单个导出任务生命周期内使用确定的后端执行全部瓦片渲染。
 
 #### Scenario: 显式选择 canvas 后端
-
 - **WHEN** 服务以 `RENDER_BACKEND=canvas` 运行并收到有效的导出请求
 - **THEN** 导出任务 SHALL 使用 canvas 渲染器完成全部瓦片渲染
 
 #### Scenario: 显式选择 webgl 后端
-
 - **WHEN** 服务以 `RENDER_BACKEND=webgl` 运行且 WebGL 渲染环境初始化成功并收到有效的导出请求
 - **THEN** 导出任务 SHALL 使用 WebGL 渲染器完成全部瓦片渲染
 
 ### Requirement: auto 模式在 WebGL 初始化失败时回退到 canvas
-
 当导出服务以 `RENDER_BACKEND=auto` 运行时，服务 SHALL 优先尝试初始化 WebGL 渲染器；若初始化失败，服务 MUST 自动回退到 canvas 渲染器，而不是直接拒绝整个导出任务。
 
 #### Scenario: auto 模式优先使用 WebGL
-
 - **WHEN** 服务以 `RENDER_BACKEND=auto` 运行且 WebGL 渲染环境初始化成功
 - **THEN** 导出任务 SHALL 选择 WebGL 渲染器执行该任务
 
 #### Scenario: auto 模式初始化失败后回退
-
 - **WHEN** 服务以 `RENDER_BACKEND=auto` 运行且 WebGL 渲染器初始化失败
 - **THEN** 导出任务 MUST 自动切换到 canvas 渲染器继续执行
 
 ### Requirement: 导出失败记录包含瓦片与后端信息
-
 当导出任务在初始化阶段或单瓦片渲染阶段发生失败时，导出服务 SHALL 在输出结果中记录失败详情，至少包含失败瓦片坐标（如适用）、所用后端、错误原因与时间信息，以便调用方排查。
 
 #### Scenario: 单瓦片渲染失败被记录
-
 - **WHEN** 导出任务在渲染某个 `z/x/y` 瓦片时发生异常或超时
 - **THEN** 服务 SHALL 在输出目录的元数据或失败记录文件中写入该瓦片坐标、后端类型、错误信息与时间戳
 
 #### Scenario: 初始化阶段失败被记录
-
 - **WHEN** 导出任务在渲染器初始化阶段失败且任务无法继续
 - **THEN** 服务 SHALL 在输出结果中记录失败发生在初始化阶段以及对应的后端与错误原因

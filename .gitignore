@@ -11,3 +11,4 @@ VectorTileToCesiumImageryLayerTiles/service/output/
 VectorTileToCesiumImageryLayerTiles/shared/dist/
 VectorTileToCesiumImageryLayerTiles/web/dist/
 node_modules/
+.worktrees/
