@@ -69,6 +69,33 @@ pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGener
 bash /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh
 ```
 
+如需自定义输出目录、瓦片尺寸、格式与范围：
+
+```bash
+bash /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh \
+  /path/to/style.json \
+  10 \
+  12 \
+  output/custom-demo \
+  512 \
+  jpg \
+  "120,31,121,32"
+```
+
+如需从 `GeoJSON` 文件自动计算导出范围：
+
+```bash
+bash /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh \
+  /path/to/style.json \
+  10 \
+  12 \
+  output/custom-demo \
+  512 \
+  png \
+  "" \
+  /path/to/area.geojson
+```
+
 WebGL/auto 小范围冒烟：
 
 ```bash
@@ -135,27 +162,65 @@ curl -sS http://localhost:4100/api/exports/<job-id>
 我们提供了一个示例脚本，便于从命令行快速发起导出：
 
 ```bash
-bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh [样式文件路径] [minZoom] [maxZoom] [outputPath]
+bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh [样式文件路径] [minZoom] [maxZoom] [outputPath] [tileSize] [format] [bounds] [geojsonPath]
 ```
+
+参数说明：
+
+- `format`：可选，默认 `png`，也可传 `jpg`
+- `bounds`：可选，默认 `"120.0,31.0,121.0,32.0"`，格式为 `"minLng,minLat,maxLng,maxLat"`
+- `geojsonPath`：可选，传入 `GeoJSON` 文件路径后，脚本会先计算 bbox，再覆盖 `bounds`
+- `SERVICE_URL`：可选环境变量，默认 `http://localhost:4100`
 
 - **默认行为（不传参数）**：
 
 ```bash
-# 使用共享默认样式 + 导出 0–17 级
+# 使用共享默认样式 + 导出 10–12 级 + 输出到 output/demo + 256 像素 PNG 瓦片 + 默认 bounds
 bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh
 ```
 
-- **使用 Web 导出的样式，仅导出 7–14 级**：
+- **使用 Web 导出的样式，仅导出 7–14 级，并设置输出目录、512 像素 JPG 瓦片与自定义范围**：
 
 ```bash
 bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh \
   /path/to/web-exported-style.json \
   7 \
   14 \
-  output/custom-demo
+  output/custom-demo \
+  512 \
+  jpg \
+  "120,31,121,32"
+```
+
+- **使用 GeoJSON 文件自动计算范围**：
+
+```bash
+bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh \
+  /path/to/web-exported-style.json \
+  7 \
+  14 \
+  output/custom-demo \
+  512 \
+  png \
+  "" \
+  /path/to/area.geojson
 ```
 
 脚本会先在标准错误输出一份请求体预览，随后通过 `curl` 调用 `http://localhost:4100/api/exports`。如果服务不是跑在默认地址，可通过 `SERVICE_URL=http://host:port` 覆盖。
+
+例如：
+
+```bash
+SERVICE_URL=http://127.0.0.1:4200 \
+bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh \
+  /path/to/web-exported-style.json \
+  7 \
+  14 \
+  output/custom-demo \
+  512 \
+  png \
+  "120,31,121,32"
+```
 
 ### WebGL 快速验证
 
