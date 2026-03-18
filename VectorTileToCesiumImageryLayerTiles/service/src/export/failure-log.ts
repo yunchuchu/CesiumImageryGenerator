@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises";
+import { rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { TileRenderer } from "../renderers/types.js";
 
@@ -23,7 +23,14 @@ export interface TileFailure {
   timestamp: string;
 }
 
-export type ExportFailure = InitializationFailure | TileFailure;
+export interface CleanupFailure {
+  stage: "cleanup";
+  backend: TileRenderer["backend"];
+  error: string;
+  timestamp: string;
+}
+
+export type ExportFailure = InitializationFailure | TileFailure | CleanupFailure;
 
 export function createInitializationFailure(
   backend: TileRenderer["backend"],
@@ -53,12 +60,27 @@ export function createTileFailure(
   };
 }
 
+export function createCleanupFailure(
+  backend: TileRenderer["backend"],
+  error: unknown,
+  timestamp = new Date().toISOString()
+): CleanupFailure {
+  return {
+    stage: "cleanup",
+    backend,
+    error: getErrorMessage(error),
+    timestamp
+  };
+}
+
 export async function writeFailureLog(outputPath: string, failures: ExportFailure[]) {
+  const failureLogPath = path.join(outputPath, "failures.json");
   if (!failures.length) {
+    await rm(failureLogPath, { force: true });
     return;
   }
   await writeFile(
-    path.join(outputPath, "failures.json"),
+    failureLogPath,
     JSON.stringify(failures, null, 2)
   );
 }

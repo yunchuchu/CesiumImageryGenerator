@@ -13,6 +13,8 @@ FORMAT="${6:-png}"
 BOUNDS="${7:-120.0,31.0,121.0,32.0}"
 GEOJSON_PATH="${8:-}"
 SERVICE_URL="${SERVICE_URL:-http://localhost:4100}"
+SKIP_EXISTING="${SKIP_EXISTING:-false}"
+RETRY_FAILURES_ONLY="${RETRY_FAILURES_ONLY:-false}"
 
 if [[ ! -f "$STYLE_PATH" ]]; then
   echo "找不到样式文件: $STYLE_PATH" >&2
@@ -29,6 +31,8 @@ const tileSize = Number(process.argv[5] ?? "256");
 const format = process.argv[6] ?? "png";
 const rawBounds = process.argv[7] ?? "120.0,31.0,121.0,32.0";
 const geojsonPath = process.argv[8] ?? "";
+const skipExisting = process.argv[9] === "true";
+const retryFailuresOnly = process.argv[10] === "true";
 const style = JSON.parse(fs.readFileSync(stylePath, "utf-8"));
 let bounds = parseBounds(rawBounds);
 if (geojsonPath) {
@@ -43,7 +47,9 @@ const body = {
     minZoom,
     maxZoom,
     bounds,
-    outputPath
+    outputPath,
+    skipExisting,
+    retryFailuresOnly
   }
 };
 console.log(JSON.stringify(body));
@@ -101,7 +107,7 @@ function computeGeojsonBounds(geojson) {
 
   return bbox;
 }
-' "$STYLE_PATH" "$MIN_ZOOM" "$MAX_ZOOM" "$OUTPUT_PATH" "$TILE_SIZE" "$FORMAT" "$BOUNDS" "$GEOJSON_PATH")
+' "$STYLE_PATH" "$MIN_ZOOM" "$MAX_ZOOM" "$OUTPUT_PATH" "$TILE_SIZE" "$FORMAT" "$BOUNDS" "$GEOJSON_PATH" "$SKIP_EXISTING" "$RETRY_FAILURES_ONLY")
 
 echo "请求体预览：" >&2
 echo "$payload" | sed 's/\\\\n/ /g' >&2

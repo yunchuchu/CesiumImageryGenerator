@@ -87,4 +87,95 @@ describe("createWebglRenderer", () => {
     expect(context.close).toHaveBeenCalledOnce();
     expect(browser.close).toHaveBeenCalledOnce();
   });
+
+  it("still closes the browser when context cleanup fails", async () => {
+    const page = {
+      goto: vi.fn().mockResolvedValue(undefined),
+      evaluate: vi.fn().mockResolvedValue(undefined),
+      screenshot: vi.fn().mockResolvedValue(Buffer.from("png")),
+      close: vi.fn().mockResolvedValue(undefined)
+    };
+    const context = {
+      newPage: vi.fn().mockResolvedValue(page),
+      close: vi.fn().mockRejectedValue(new Error("context close failed"))
+    };
+    const browser = {
+      newContext: vi.fn().mockResolvedValue(context),
+      close: vi.fn().mockResolvedValue(undefined)
+    };
+    const launchBrowser = vi.fn().mockResolvedValue(browser);
+    const renderer = await createWebglRenderer({
+      backend: "webgl",
+      format: "png",
+      tileSize: 256,
+      style: buildTestStyle(),
+      launchBrowser
+    });
+
+    await renderer.init();
+    await expect(renderer.dispose()).rejects.toThrow("context close failed");
+
+    expect(context.close).toHaveBeenCalledOnce();
+    expect(browser.close).toHaveBeenCalledOnce();
+  });
+
+  it("closes late browser instances when dispose races with initialization", async () => {
+    const context = {
+      newPage: vi.fn(),
+      close: vi.fn().mockResolvedValue(undefined)
+    };
+    const browser = {
+      newContext: vi.fn().mockResolvedValue(context),
+      close: vi.fn().mockResolvedValue(undefined)
+    };
+    let resolveBrowser: ((value: typeof browser) => void) | undefined;
+    const launchBrowser = vi.fn().mockImplementation(() => new Promise((resolve) => {
+      resolveBrowser = resolve;
+    }));
+    const renderer = await createWebglRenderer({
+      backend: "webgl",
+      format: "png",
+      tileSize: 256,
+      style: buildTestStyle(),
+      launchBrowser
+    });
+
+    const initPromise = renderer.init();
+    await renderer.dispose();
+    resolveBrowser?.(browser);
+
+    await expect(initPromise).rejects.toThrow("renderer disposed during initialization");
+    expect(browser.close).toHaveBeenCalledOnce();
+    expect(browser.newContext).not.toHaveBeenCalled();
+  });
+
+  it("closes the browser if dispose races while newContext is still pending", async () => {
+    let resolveContext: ((value: { newPage: () => Promise<unknown>; close: () => Promise<void> }) => void) | undefined;
+    const context = {
+      newPage: vi.fn(),
+      close: vi.fn().mockResolvedValue(undefined)
+    };
+    const browser = {
+      newContext: vi.fn().mockImplementation(() => new Promise((resolve) => {
+        resolveContext = resolve;
+      })),
+      close: vi.fn().mockResolvedValue(undefined)
+    };
+    const launchBrowser = vi.fn().mockResolvedValue(browser);
+    const renderer = await createWebglRenderer({
+      backend: "webgl",
+      format: "png",
+      tileSize: 256,
+      style: buildTestStyle(),
+      launchBrowser
+    });
+
+    const initPromise = renderer.init();
+    await Promise.resolve();
+    await renderer.dispose();
+    resolveContext?.(context);
+
+    await expect(initPromise).rejects.toThrow();
+    expect(browser.close).toHaveBeenCalledOnce();
+  });
 });

@@ -1,7 +1,12 @@
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  createCleanupFailure,
   createInitializationFailure,
-  createTileFailure
+  createTileFailure,
+  writeFailureLog
 } from "./failure-log.js";
 
 describe("failure-log", () => {
@@ -35,5 +40,34 @@ describe("failure-log", () => {
       error: "tile timeout",
       timestamp: "2026-03-16T10:00:01.000Z"
     });
+  });
+
+  it("records cleanup failures with backend and timestamp", () => {
+    const failure = createCleanupFailure(
+      "webgl",
+      new Error("browser close failed"),
+      "2026-03-16T10:00:02.000Z"
+    );
+
+    expect(failure).toEqual({
+      stage: "cleanup",
+      backend: "webgl",
+      error: "browser close failed",
+      timestamp: "2026-03-16T10:00:02.000Z"
+    });
+  });
+
+  it("removes stale failure logs when a rerun succeeds", async () => {
+    const outputDir = await mkdtemp(path.join(os.tmpdir(), "vttc-failure-log-"));
+    const failureLogPath = path.join(outputDir, "failures.json");
+
+    try {
+      await writeFile(failureLogPath, JSON.stringify([{ stale: true }]), "utf8");
+      await writeFailureLog(outputDir, []);
+
+      await expect(readFile(failureLogPath, "utf8")).rejects.toThrow();
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
   });
 });

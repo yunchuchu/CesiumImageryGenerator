@@ -3,7 +3,7 @@
 本目录用于搭建本地 PostGIS + Martin 环境，导入已有的 OSM GeoJSON 输出，并提供经过整理的矢量瓦片，便于进行 MapLibre 校验与 Cesium 栅格化工作。
 
 技术说明（架构/数据流/目录结构等）请查看：
-`/Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/Vector-Tiles-Server/TECHNICAL_OVERVIEW.md`
+`Vector-Tiles-Server/TECHNICAL_OVERVIEW.md`
 
 ## 需求
 
@@ -64,7 +64,7 @@ python3 -m http.server 8000
 
 ## 端口与镜像配置
 
-编辑 `/Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/Vector-Tiles-Server/.env`：
+编辑 `Vector-Tiles-Server/.env`：
 
 ```
 POSTGRES_PORT=5432
@@ -160,7 +160,7 @@ SELECT count(*) FROM vt.road_primary;
 - 直接请求瓦片：
   - `http://localhost:3000/base_transport/7/106/52`
 - MapLibre 验证页：
-  - `cd /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/Vector-Tiles-Server/maplibre`
+  - `cd Vector-Tiles-Server/maplibre`
   - `python3 -m http.server 8000`
   - 浏览器访问 `http://localhost:8000`
 

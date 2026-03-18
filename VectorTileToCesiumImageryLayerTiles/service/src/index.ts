@@ -6,12 +6,22 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { compileStyle, type StyleConfig } from "@vttc/shared";
 import {
+  createCleanupFailure,
   createInitializationFailure,
   createTileFailure,
   writeFailureLog,
   type ExportFailure
 } from "./export/failure-log.js";
-import { parseBackendConfig } from "./renderers/backend-config.js";
+import {
+  initializePrimaryRenderer,
+  PrimaryRendererInitializationError
+} from "./export/primary-renderer.js";
+import {
+  renderTilesWithWorkerPool,
+  TileRenderPoolExecutionError
+} from "./export/scheduler.js";
+import { createTileTaskSource, type TileRange } from "./export/task-source.js";
+import { parseBackendConfig, resolveExportConcurrency } from "./renderers/backend-config.js";
 import { createTileRenderer } from "./renderers/factory.js";
 import type { RenderBackend, TileRenderer } from "./renderers/types.js";
 
@@ -92,6 +102,8 @@ interface ExportOptions {
   maxZoom: number;
   bounds: [number, number, number, number];
   outputPath?: string;
+  skipExisting?: boolean;
+  retryFailuresOnly?: boolean;
 }
 
 interface ExportJob extends ExportRequest {
@@ -104,15 +116,6 @@ interface ExportJob extends ExportRequest {
   totalTiles: number;
   completedTiles: number;
   error?: string;
-}
-
-interface TileRange {
-  zoom: number;
-  minX: number;
-  maxX: number;
-  minY: number;
-  maxY: number;
-  count: number;
 }
 
 function normalizeExportPayload(body: unknown): ExportRequest {
@@ -144,7 +147,9 @@ function normalizeExportPayload(body: unknown): ExportRequest {
       minZoom,
       maxZoom,
       bounds: bounds as [number, number, number, number],
-      outputPath: raw.outputPath
+      outputPath: raw.outputPath,
+      skipExisting: parseOptionalBoolean(raw.skipExisting),
+      retryFailuresOnly: parseOptionalBoolean(raw.retryFailuresOnly)
     }
   };
 }
@@ -198,7 +203,7 @@ async function runExport(job: ExportJob) {
     job.totalTiles = tileRanges.reduce((sum, item) => sum + item.count, 0);
     job.completedTiles = 0;
 
-    renderer = await createTileRenderer({
+    const rendererOptions = {
       backend: backendConfig.backend,
       format: options.format ?? "png",
       tileSize,
@@ -207,57 +212,69 @@ async function runExport(job: ExportJob) {
       headless: backendConfig.headless,
       launchArgs: backendConfig.renderArgs,
       webglInitTimeoutMs: backendConfig.webglTileRenderTimeoutMs
+    } as const;
+
+    const primaryRenderer = await initializePrimaryRenderer({
+      backendConfig,
+      rendererOptions
     });
-    resolvedBackend = renderer.backend;
-    job.backend = renderer.backend;
+    renderer = primaryRenderer.renderer;
+    resolvedBackend = primaryRenderer.resolvedBackend;
+    failures.push(...primaryRenderer.failures);
+    job.backend = resolvedBackend;
 
-    try {
-      const initTimeoutMs = renderer.backend === "webgl"
-        ? backendConfig.webglTileRenderTimeoutMs
-        : backendConfig.tileRenderTimeoutMs;
-      await withTimeout(
-        renderer.init(),
-        initTimeoutMs,
-        `${renderer.backend} 渲染器初始化超时`
-      );
-    } catch (error) {
-      failures.push(createInitializationFailure(renderer.backend, error));
-      throw error;
-    }
-
-    const tileRenderTimeoutMs = renderer.backend === "webgl"
+    const tileRenderTimeoutMs = resolvedBackend === "webgl"
       ? backendConfig.webglTileRenderTimeoutMs
       : backendConfig.tileRenderTimeoutMs;
+    const exportConcurrency = resolveExportConcurrency(backendConfig, resolvedBackend);
+    const taskSource = await createTileTaskSource({
+      ranges: tileRanges,
+      outputPath: job.outputPath,
+      format: options.format ?? "png",
+      skipExisting: options.skipExisting,
+      retryFailuresOnly: options.retryFailuresOnly
+    });
+    job.totalTiles = taskSource.total;
 
-    for (const range of tileRanges) {
-      for (let x = range.minX; x <= range.maxX; x += 1) {
-        for (let y = range.minY; y <= range.maxY; y += 1) {
-          let buffer: Buffer;
-          try {
-            buffer = await withTimeout(
-              renderer.renderTile(range.zoom, x, y),
-              tileRenderTimeoutMs,
-              `瓦片渲染超时: z${range.zoom}/${x}/${y}`
-            );
-          } catch (error) {
-            failures.push(createTileFailure(renderer.backend, { z: range.zoom, x, y }, error));
-            throw error;
-          }
-          const outputDir = path.join(job.outputPath, `${range.zoom}`, `${x}`);
-          await mkdir(outputDir, { recursive: true });
-          await writeFile(path.join(outputDir, `${y}.${options.format ?? "png"}`), buffer);
-          job.completedTiles += 1;
-          job.updatedAt = new Date().toISOString();
-        }
+    const initialRenderer = renderer;
+    renderer = undefined;
+
+    await renderTilesWithWorkerPool({
+      taskSource,
+      concurrency: exportConcurrency,
+      rendererInitTimeoutMs: tileRenderTimeoutMs,
+      tileRenderTimeoutMs,
+      initialRenderer,
+      allowReducedWorkerPoolOnInitFailure: backendConfig.backend === "auto",
+      onRendererInitFailure: (failure) => {
+        failures.push(createInitializationFailure(failure.backend, failure));
+      },
+      createRenderer: async () => createTileRenderer({
+        ...rendererOptions,
+        backend: resolvedBackend
+      }),
+      onTileComplete: () => {
+        job.completedTiles += 1;
+        job.updatedAt = new Date().toISOString();
       }
-    }
+    });
 
     await writeMetadata(job, tileRanges, resolvedBackend, failures);
     await writeFailureLog(job.outputPath, failures);
     job.status = "completed";
     job.updatedAt = new Date().toISOString();
   } catch (error) {
-    if (!failures.length) {
+    if (error instanceof PrimaryRendererInitializationError) {
+      failures.push(...error.failures);
+    } else if (error instanceof TileRenderPoolExecutionError) {
+      failures.push(...error.failures.map((failure) => (
+        failure.stage === "init"
+          ? createInitializationFailure(failure.backend, failure)
+          : failure.stage === "tile"
+            ? createTileFailure(failure.backend, failure.tile ?? { z: -1, x: -1, y: -1 }, failure)
+            : createCleanupFailure(failure.backend, failure)
+      )));
+    } else {
       failures.push(createInitializationFailure(
         resolvedBackend ?? resolveRequestedFailureBackend(backendConfig.backend),
         error
@@ -362,4 +379,11 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: s
   } finally {
     if (timer) clearTimeout(timer);
   }
+}
+
+function parseOptionalBoolean(value: unknown): boolean | undefined {
+  if (value === true || value === false) {
+    return value;
+  }
+  return undefined;
 }

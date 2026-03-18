@@ -32,7 +32,7 @@
 在仓库根目录执行：
 
 ```bash
-pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator install --no-frozen-lockfile
+pnpm -C . install --no-frozen-lockfile
 ```
 
 ## 3. 启动步骤
@@ -40,7 +40,7 @@ pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGener
 ### 3.1 启动导出服务
 
 ```bash
-pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service dev
+pnpm -C VectorTileToCesiumImageryLayerTiles/service dev
 ```
 
 期望：
@@ -54,7 +54,7 @@ pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGener
 ### 3.2 启动 Web 编辑器
 
 ```bash
-pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/web dev --host 127.0.0.1 --port 5173
+pnpm -C VectorTileToCesiumImageryLayerTiles/web dev --host 127.0.0.1 --port 5173
 ```
 
 访问：
@@ -67,9 +67,9 @@ pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGener
 执行：
 
 ```bash
-pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/shared build
-pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/web exec tsc --noEmit
-pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service exec tsc --noEmit
+pnpm -C VectorTileToCesiumImageryLayerTiles/shared build
+pnpm -C VectorTileToCesiumImageryLayerTiles/web exec tsc --noEmit
+pnpm -C VectorTileToCesiumImageryLayerTiles/service exec tsc --noEmit
 ```
 
 通过标准：
@@ -82,7 +82,7 @@ pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGener
 ```bash
 python3 - <<'PY'
 import json, pathlib, urllib.request
-style = json.loads(pathlib.Path('/Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/shared/default-style-config.json').read_text())
+style = json.loads(pathlib.Path('VectorTileToCesiumImageryLayerTiles/shared/default-style-config.json').read_text())
 req = urllib.request.Request('http://127.0.0.1:4100/api/styles/validate', data=json.dumps(style).encode(), headers={'Content-Type':'application/json'})
 with urllib.request.urlopen(req, timeout=20) as r:
     print(r.read().decode())
@@ -113,7 +113,7 @@ PY
 执行示例导出：
 
 ```bash
-bash /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh
+bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh
 ```
 
 获得 `job id` 后轮询：
@@ -132,7 +132,7 @@ curl -sS http://127.0.0.1:4100/api/exports/<job-id>
 可用以下命令检查目录：
 
 ```bash
-ls -R /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service/output/demo
+ls -R VectorTileToCesiumImageryLayerTiles/service/output/demo
 ```
 
 ## 4.5 产物有效性
@@ -140,7 +140,7 @@ ls -R /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerat
 随机抽检一个瓦片文件：
 
 ```bash
-file /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service/output/demo/7/106/51.png
+file VectorTileToCesiumImageryLayerTiles/service/output/demo/7/106/51.png
 ```
 
 通过标准：

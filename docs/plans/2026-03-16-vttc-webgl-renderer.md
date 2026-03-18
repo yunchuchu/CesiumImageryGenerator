@@ -54,7 +54,7 @@ describe("createTileRenderer", () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service test`
+Run: `pnpm -C VectorTileToCesiumImageryLayerTiles/service test`
 
 Expected: FAIL because `vitest` is not installed and `createTileRenderer` does not exist yet.
 
@@ -97,7 +97,7 @@ export async function createTileRenderer(options: CreateTileRendererOptions): Pr
 
 **Step 4: Run test to verify it passes**
 
-Run: `pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service test`
+Run: `pnpm -C VectorTileToCesiumImageryLayerTiles/service test`
 
 Expected: PASS for renderer selection tests.
 
@@ -145,7 +145,7 @@ describe("createCanvasRenderer", () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service test -- canvas-renderer`
+Run: `pnpm -C VectorTileToCesiumImageryLayerTiles/service test -- canvas-renderer`
 
 Expected: FAIL because the renderer module does not exist yet.
 
@@ -183,7 +183,7 @@ Rename `renderRasterTile(...)` to `renderRasterTileCanvas(...)` to make backend 
 
 **Step 4: Run test to verify it passes**
 
-Run: `pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service test -- canvas-renderer`
+Run: `pnpm -C VectorTileToCesiumImageryLayerTiles/service test -- canvas-renderer`
 
 Expected: PASS and existing demo export still works with `RENDER_BACKEND=canvas`.
 
@@ -227,7 +227,7 @@ describe("xyzToCenter", () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service test -- tile-math`
+Run: `pnpm -C VectorTileToCesiumImageryLayerTiles/service test -- tile-math`
 
 Expected: FAIL because tile helpers and browser renderer do not exist yet.
 
@@ -268,7 +268,7 @@ Create `webgl-renderer.ts` with responsibilities:
 
 **Step 4: Run test to verify it passes**
 
-Run: `pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service test -- tile-math`
+Run: `pnpm -C VectorTileToCesiumImageryLayerTiles/service test -- tile-math`
 
 Expected: PASS for tile math tests, and manual browser smoke test reaches the renderer page.
 
@@ -318,7 +318,7 @@ describe("parseBackendConfig", () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service test -- backend-config`
+Run: `pnpm -C VectorTileToCesiumImageryLayerTiles/service test -- backend-config`
 
 Expected: FAIL because backend config parsing and failure logging modules do not exist.
 
@@ -347,7 +347,7 @@ Update `src/index.ts` to:
 
 **Step 4: Run test to verify it passes**
 
-Run: `pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service test -- backend-config`
+Run: `pnpm -C VectorTileToCesiumImageryLayerTiles/service test -- backend-config`
 
 Expected: PASS for config tests, and `RENDER_BACKEND=canvas` still exports successfully.
 
@@ -402,10 +402,10 @@ Update scripts with:
 **Step 4: Run test to verify it passes**
 
 Run:
-- `pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service dev`
-- `bash /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh`
-- `RENDER_BACKEND=webgl RENDER_HEADLESS=false pnpm -C /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service dev`
-- `bash /Users/yunchuchu/Documents/项目文件/GS/GS-imagery/CesiumImageryGenerator/VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo-webgl.sh`
+- `pnpm -C VectorTileToCesiumImageryLayerTiles/service dev`
+- `bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo.sh`
+- `RENDER_BACKEND=webgl RENDER_HEADLESS=false pnpm -C VectorTileToCesiumImageryLayerTiles/service dev`
+- `bash VectorTileToCesiumImageryLayerTiles/service/scripts/export-demo-webgl.sh`
 
 Expected:
 - both commands return an export job id
