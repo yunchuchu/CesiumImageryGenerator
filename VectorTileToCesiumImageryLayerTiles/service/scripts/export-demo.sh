@@ -12,6 +12,7 @@ TILE_SIZE="${5:-256}"
 FORMAT="${6:-png}"
 BOUNDS="${7:-120.0,31.0,121.0,32.0}"
 GEOJSON_PATH="${8:-}"
+START_FROM="${9:-${START_FROM:-}}"
 SERVICE_URL="${SERVICE_URL:-http://localhost:4100}"
 SKIP_EXISTING="${SKIP_EXISTING:-false}"
 RETRY_FAILURES_ONLY="${RETRY_FAILURES_ONLY:-false}"
@@ -33,12 +34,14 @@ const rawBounds = process.argv[7] ?? "120.0,31.0,121.0,32.0";
 const geojsonPath = process.argv[8] ?? "";
 const skipExisting = process.argv[9] === "true";
 const retryFailuresOnly = process.argv[10] === "true";
+const startFrom = process.argv[11] ?? "";
 const style = JSON.parse(fs.readFileSync(stylePath, "utf-8"));
 let bounds = parseBounds(rawBounds);
 if (geojsonPath) {
   const geojson = JSON.parse(fs.readFileSync(geojsonPath, "utf-8"));
   bounds = computeGeojsonBounds(geojson);
 }
+bounds = applyStartFrom(bounds, startFrom, minZoom);
 const body = {
   style,
   export: {
@@ -107,7 +110,31 @@ function computeGeojsonBounds(geojson) {
 
   return bbox;
 }
-' "$STYLE_PATH" "$MIN_ZOOM" "$MAX_ZOOM" "$OUTPUT_PATH" "$TILE_SIZE" "$FORMAT" "$BOUNDS" "$GEOJSON_PATH" "$SKIP_EXISTING" "$RETRY_FAILURES_ONLY")
+
+function applyStartFrom(bounds, startFrom, minZoom) {
+  if (!startFrom) return bounds;
+  const [zoomText, xText] = String(startFrom).split("/");
+  const startZoom = Number(zoomText);
+  const startX = Number(xText);
+  if (!Number.isInteger(startZoom) || !Number.isInteger(startX)) {
+    throw new Error("START_FROM 必须是 z/x，例如 16/54613");
+  }
+  if (startZoom !== minZoom) {
+    throw new Error(`START_FROM zoom(${startZoom}) 必须等于 minZoom(${minZoom})`);
+  }
+  const startLng = tileXToLng(startX, startZoom);
+  const adjusted = [...bounds];
+  adjusted[0] = Math.max(adjusted[0], startLng);
+  if (adjusted[0] >= adjusted[2]) {
+    throw new Error("START_FROM 超出当前 bounds，导致范围为空");
+  }
+  return adjusted;
+}
+
+function tileXToLng(x, z) {
+  return (x / (2 ** z)) * 360 - 180;
+}
+' "$STYLE_PATH" "$MIN_ZOOM" "$MAX_ZOOM" "$OUTPUT_PATH" "$TILE_SIZE" "$FORMAT" "$BOUNDS" "$GEOJSON_PATH" "$SKIP_EXISTING" "$RETRY_FAILURES_ONLY" "$START_FROM")
 
 echo "请求体预览：" >&2
 echo "$payload" | sed 's/\\\\n/ /g' >&2
